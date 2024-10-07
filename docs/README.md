@@ -32,11 +32,18 @@
 ## 使用方法 🛠️
 
 1. **克隆仓库**：
-   ```sh
-   git clone https://github.com/your-username/Paper-Digester.git
-   cd Paper-Digester
+   ```shell
+    git clone https://github.com/your-username/Paper-Digester.git
+
+    cd Paper-Digester
+   ```
 2. **浏览论文**：
-    在各个领域目录下查看已收集的论文，并阅读相关的批注和理解。
+    在各个领域目录下查看已收集的论文，并阅读相关的批注和理解即可。
+
+### 已有成果 🏆
+| 名字 | 简介 | 地址 | 会议/期刊 | 年份 | 笔记 | 代码 |
+| ---- | ---- | ---- | ---- | ---- | ---- | ---- |
+| BERT:Pre-training of Deep Bidirectional Transformers for Language Understanding | bert | [paper](https://arxiv.org/abs/1810.04805) | arXiv | 2018 | [notes](contents/LLM/bert.md) | [code](https://github.com/codertimo/BERT-pytorch) | 
 
 ## 贡献指南 🤝
 欢迎贡献代码！请阅读 [CONTRIBUTING.md](CONTRIBUTING.md) 文件，了解如何为这个项目贡献代码。

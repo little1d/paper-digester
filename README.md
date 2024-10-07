@@ -32,13 +32,17 @@
 ## 使用方法 🛠️
 
 1. **克隆仓库**：
-   ```sh
+   ```shell
    git clone https://github.com/your-username/Paper-Digester.git
+
    cd Paper-Digester
+   ```
 2. **浏览论文**：
     在各个领域目录下查看已收集的论文，并阅读相关的批注和理解。
 
+
+
 ## 贡献指南 🤝
-欢迎贡献代码！请阅读 [CONTRIBUTING.md](CONTRIBUTING.md) 文件，了解如何为这个项目贡献代码。
+欢迎贡献代码！请阅读 [CONTRIBUTING.md](docs/CONTRIBUTING.md) 文件，了解如何为这个项目贡献代码。
 
 我们期待你的参与和贡献！一起提升学术视野，深入理解 AI 领域的最新研究成果。

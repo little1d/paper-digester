@@ -6,16 +6,21 @@
 
 1. **Fork 仓库**：首先，请 fork 本仓库到你的 GitHub 账户。
 2. **Clone 仓库**：将你 fork 的仓库 clone 到本地。
-   ```sh
+   ```shell
    git clone https://github.com/your-username/finetune-recipes.git
+   ```
 3. **创建新分支**：在本地创建一个新的分支进行开发。
     ```shell
    git checkout -b your-new-branch-name
-4. **更改并提交** 
+    ```
+4. **进行创作**：在 `contents` 文件夹下添加自己的笔记内容；在 `notebooks` 文件夹下添加自己的代码示例。
+5. **增加目录和信息**：在`_sidebar.md`修改目录；在`docs/README.md`中添加具体论文信息
+6. **更改并提交** 
     ```shell
    git commit -m "Add your meaningful comit message here"
    git push origin your-new-branch-name
-5. **创建 Pull Request**：提一个新 PR,并详细描述你的更改
+   ```
+7. **创建 Pull Request**：提一个新 PR,并详细描述你的更改
 
 ## 📝 贡献类型
 
