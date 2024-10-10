@@ -1,116 +1,98 @@
-# DepGraph: Towards Any Structural Pruning
+# Bert
 
+> ***Pre-traning of Deep Bidirectional Transformers for Language Understanding***
 
+## Abstract
+BERT, which stands for Bidirectional Encoder Representations from Transformer.
 
-**作者：** Gongfan Fang Xinyin Ma Mingli Song Michael Bi Mi Xinchao Wang
+Bert is designed to pre-train deep bidirectional representations from unlabeled text by jointly conditioning on both left and right context in all layers.
 
-**发表刊物/会议：** CVPR
+BERT旨在通过对所有层中的上下文进行调节，从未标记文本中预训练深度的双向表征。
 
-**发表年份：** 2023
+也正是因为此，BERT不同于以往的语言模型，只需要增加一个额外的输出层即可对BERT模型进行微调，就可以为各种任务（例如问答、语言推理）创建最先进的模型，无需针对特定任务架构进行大量修改（without substantial task-specific architecture modifications）
 
-**论文地址：** https://arxiv.org/abs/2301.12900
+All in All, BERT is conceptually simple and empirically powerfull !  BERT概念简单，实证强大
 
-**代码地址：** https://github.com/VainF/Torch-Pruning
+## Introduction
+在此之前的一些工作，已经证明语言模型预训练可以改善许多nlp任务，并且模型需要token级细粒度的输出（fine grained output at token level）
 
+作者还概括了，目前现有的将预训练语言模型应用于下游任务有两种现有策略，可以提前剧透一下 BERT 主要属于第二种。
+1. feature-based：使用特定于任务的架构，包括预训练的表征作为额外的特征 
+2. fine-tuning：引入最少特定参数（specific parameters），并在下游任务上简单的微调训练参数
 
-## 内容概要
+这两种方法在pre-train的时候具有相同的目标函数，使用单向语言模型(unidirectional language models)来学习一般语言表示。作者大大认为单向学习限制了预训练的能力。例如OpenAI GPT，也就是老牌的Transformer，使用了一种left-to-right  architecture，每一个token的生成只能关注在先前Transformer层中存在的token，这在句子级任务（sentence-level tasks）是次优的，对于token级任务是非常有害的。
 
-结构修剪通过从神经网络中去除结构分组参数来实现模型加速。然而，参数分组模式在不同的模型中差异很大，它依赖于手动设计分组方案，使得特定体系结构的修剪器无法推广到新的体系结构。在这项工作中，研究了一个极具挑战性但很少探索的任务，即任何结构修剪，以解决任意架构(如cnn, rnn, gnn和transformer)的一般结构修剪。实现这一目标最突出的障碍在于结构耦合，它不仅迫使不同的层同时被修剪，而且希望所有被删除的参数始终不重要，从而避免修剪后出现结构问题和显著的性能下降。为了解决这一问题，本文提出了一种通用的全自动方法——依赖图(DepGraph)，该方法显式地对层与层之间的依赖关系进行建模，并对耦合参数进行综合分组以进行剪枝。在这项工作中，本文在几种架构和任务上广泛评估了所提的方法，包括用于图像的ResNe(X)t、DenseNet、MobileNet和Vision transformer，用于图形的GAT，用于3D点云的DGCNN，以及用于语言的LSTM，并证明，即使使用简单的基于范式的标准，所提出的方法也始终产生令人满意的性能。
+> 我的理解是上下文越短，这种自回归性质的任务，单向预训练的表现就越差
 
+下面是重点：
+In this paper, We improve the fine-tuning based approaches by proposing BERT. BERT alleviates the previously mentioned unidirectionality constraint by using a "masked language model" pre-training objective.
 
-## 主要解决问题/应用
+作者提出BERT，使用一种掩码语言模型(MLM)来缓解单向性约束，作者也指出这种表示能融合上下文（fuse the left and the right context），这能够训练双向Transformer。文章的主要贡献如下：
 
-- 如何实现对神经网络中的任何结构进行剪枝
+1. 证明双向预训练对语言表示的重要性，具体方法是掩码语言模型
+2. 验证预训练表征减少了许多重工程化任务对模型特定架构的需求，展示了fine-tuning表征模型的优越性，甚至优于许多专注于特定任务的设计
 
-- 参数分组是结构化剪枝算法落地的一个难题。深度神经网络是建立在卷积、归一化或激活等大量基本模块之上的，而这些模块，无论是否参数化，都是通过复杂的连接内在耦合的，裁剪具有耦合和复杂内部结构的现代深度神经网络是一项挑战性任务。
+## Related Work
+1. Unsupervised Fearure-based Approaches
 
+    这里作者又简单回顾了前几十年的feature-based工作，从最开始的“从头开始学习的嵌入”到词嵌入，再到后来的left-to-right context 语言建模区分正确和错误单词。这些方法已经被推广到更粗的粒度
 
-## 主要使用方法/模型
+2. Unsupervised Fine-tuning Approaches  无监督微调方法
 
-DepGraph的主要使用方法是构建一个依赖图来表示神经网络中的结构关系。这个依赖图可以捕捉网络中各个结构之间的依赖关系，从而为剪枝策略提供指导。DepGraph的核心思想是将剪枝问题转化为一个图优化问题，通过求解这个优化问题来确定剪枝策略。
+    指的是从未标记的文本中训练出产生上下文token表征的编码器，并对下游任务进行微调。优势就是需要从头开始训练的参数很少，把不同领域问题统一成设计一个良好的自动编码器这样一个目标
 
-DepGraph的模型包括以下几个关键组件：
+3. Transfer Learning from Supervised Data 迁移学习
 
-- 依赖图构建：首先，根据神经网络的结构构建一个依赖图。这个依赖图表示网络中各个结构之间的依赖关系，例如卷积层、激活层、池化层等。
+## BERT
+终于到正文了，论文中有张图展示了预训练和微调的主要流程
 
-- 剪枝策略生成：利用依赖图来生成剪枝策略。这个策略可以指导用户选择要剪枝的结构，从而实现对神经网络的定制化压缩。
+![pretrain_and_finetune](../../images/bert-procedure.png)
+1. pre-training：在不同预训练任务上基于未标记的数据进行训练
+2. fine-tuning：首先使用预训练的参数初始化，然后使用来自下游任务的标记数据对所有参数进行微调，每个下游任务都有单独微调模型。
 
-- 剪枝策略优化：通过求解图优化问题来确定最终的剪枝策略。这个优化问题可以确保剪枝后的模型结构保持相对完整，便于硬件加速计算。
+这样就可以解释上面一张图了
 
+> A distinctive feature of BERT is its unified architecture across different tasks. There is minimal difference between the pre-trained architecture and the final downsteam architecture.
 
-## 主要实验手段/数据集
+> BERT的独特之处在于其统一的架构，预训练架构与下游架构差异很小。从后半张图中也可见一斑
 
-实验手段：
+### Model Architecture 模型架构
+多层双向Transformer编码器，其结构其实与传统的GPT Transformer架构并无很大差异。至关重要的是Bert Transformer使用bidirectional self-attention，GPT-transformer使用constrained self-attention。其实也是双向和单向的区别。
 
-- 模型选择：DepGraph在多种类型的神经网络（如卷积神经网络（CNN）和循环神经网络（RNN））上进行实验，以验证其在不同网络结构中的有效性。
+### In/Out Representations
+这一小节描述的是BERT工作中对于语句token级的处理
 
-- 剪枝策略比较：DepGraph与其他剪枝方法（如非结构化剪枝和结构化剪枝）进行比较，以评估其在保持模型性能的同时实现模型压缩的能力。
+![io_representations](../../images/io-represent.png)
 
-- 剪枝效果评估：通过计算模型的参数量、计算量和精度等指标，评估DepGraph在不同剪枝策略下的剪枝效果。
+其中input representation是由Token Embeddings、Segment Embeddings以及Position Embeddings求和来构造的。上面是可视化的结构。关于这里的每个部分作者并没有详细说明……有点可惜，不过我们大概也能猜出来，有一些特殊分类标记[CLS][SEP]表示开头和句子间区分，Segment表示术语哪一个句子。这样的设计对于接下来的预训练有什么帮助，笔者能力受限还没搞懂。
 
-数据集：
+## Pre-training BERT
 
-- DepGraph在多个数据集上进行实验，包括：
+> we pre-train BERT using two unsupervised tasks.
 
-- CIFAR-10：一个包含10个类别的图像分类数据集，包含60,000张32x32像素的彩色图像。
+### TASK #1: Masked LM
 
-- ImageNet：一个大型图像分类数据集，包含1,000个类别，超过1,000,000张图像。
+直觉得说，有理由相信深度双向模型比单向更强大，但是这种双向条件允许每个单词间接的看到其本身，这样模型就可以更轻松的预测，这实际上是不好的。
+为了训练深度双向表征，可以随机屏蔽一些input token，这个过程成为“masked LM”，这里的灵感来自于前人做的完型填空任务。anyway，在这种情况下，与masked token对应的hidden vectors最终通过vocabulary送到softmax中。与自动编码器相比，BERT只预测了被masked的单词。
+虽然我们这样可以通过前后文来得到双向预训练模型，但缺点是在预训练和微调之间造成了不匹配。为了[MASK]在fine-tuning期间是不会出现的，为了缓解这种情况，并不总是使用实际的[MASK] token替换"masked" word。
 
-- Penn Treebank：一个用于自然语言处理任务的文本数据集，包含超过1,000,000个单词。
+<!-- TODO -->
+> 没看懂……问题阐释看懂了，但这种解决方案没看懂。进行token预测为什么还要替换为随机的token/不变的token。直觉来看是添加噪声？
 
-## 创造性思考
+### TASK #2：Next Sentence Prediction (NSP)
+语言建模并不能理解两个句子之间的关系，至少现在不能。为了让模型理解，我们引入了next sentence prediction task。这个task的corpus可以轻松从任何单语语料库中构建。为了提取长连续序列，使用文档级的corpus而不是打乱的sentence-level的预料非常重要！！！
 
-- 提出了一种名为DepGraph的结构化剪枝方法，该方法可以灵活地对神经网络中的任何结构进行剪枝。
-- DepGraph通过构建一个依赖图来表示神经网络中的结构关系，然后利用这个依赖图来确定剪枝策略。这种方法可以应用于各种类型的神经网络，通过DepGraph，用户可以灵活地选择要剪枝的结构，从而实现对神经网络的定制化压缩。这为神经网络剪枝提供了一种新的思路和方法。
+### Fine-tuning BERT
+微调任务很直接，因为Transformer的自注意力机制允许BERT交换适当的输入输出来模拟许多下游任务。对于每个任务，只需要将输入输出插入，端到端的微调所有参数。
 
-## 批判式思考
+### Experiments and Ablation Studies
+关于这些部分，其实对于我来说重点是搞懂大佬是怎么来设计实验的，实验的具体内容次之。
+消融实验：
+1. 依次消除task1和task2（掩码和NSP）
+2. 调整模型大小 Model Size（超参数和训练步骤不变，指标还是Experiments选取的评价指标）
+然后这部分再来一个总结与展望。阐述scaling law在BERT论文也是有得以体现的。
 
-- 实验范围有限：文章中仅在部分数据集和网络结构上进行了实验，可能无法充分验证DepGraph在所有场景下的通用性和有效性。
-
-- 剪枝策略选择：虽然DepGraph提供了一种灵活的剪枝策略选择方法，但在实际应用中，用户可能需要根据具体任务和需求进行调整和优化。
-
-- 计算复杂度：构建依赖图和求解图优化问题可能会增加计算复杂度，这可能对实时应用和大规模神经网络剪枝产生影响。
-
-## 讨论 
-
-
-1. 层内依赖的处理方式是什么样的？
-
-    算法会分析神经网络中的每个层，找出层内各个结构之间的连接和依赖关系。然后，将这些关系表示为依赖图中的节点和边。通过这种方式，算法可以捕捉到层内依赖关系，并在剪枝过程中充分利用这些信息来确定剪枝策略。
-
-2. 怎么理解Batch Normalization的输入输出则存在简单的层内依赖？
-
-    Batch Normalization通过对输入数据的均值和方差进行归一化处理，使得输出数据的均值为0，方差为1。这有助于减少内部协变量偏移（Internal Covariate Shift），从而加速神经网络的训练过程。
-    
-    在Batch Normalization中，输入输出之间的简单层内依赖关系体现在以下几点：
-
-   - 均值和方差计算：Batch Normalization计算输入数据的均值和方差，这些统计量是输入数据的函数，因此输入数据和输出数据之间存在简单的依赖关系。
-
-   - 归一化处理：Batch Normalization对输入数据进行归一化处理，使得输出数据的均值为0，方差为1。这使得输出数据的分布更加稳定，从而有助于提高模型性能。
-
-   - 参数更新：Batch Normalization引入了可学习的参数（如缩放因子和偏移因子），这些参数可以根据输入数据的变化进行更新。这使得输入输出之间存在简单的依赖关系，有助于模型适应不同的输入数据分布。
-
-3. 结构化裁剪和非结构化裁剪的区别是什么？
-    - 结构修剪通过物理去除分组参数来改变神经网络的结构，去除不重要的神经元，相应地，被剪除的神经元和其他神经元之间的连接在计算时会被忽略
-    - 非结构修剪在不改变网络结构的情况下对部分权值进行归零
-    - 与非结构化修剪相比，结构化修剪不依赖于特定的人工智能加速器或软件来减少内存消耗和计算成本，从而在实践中找到更广泛的应用领域。从技术上讲，结构化剪枝按组剪枝权重（删除整个神经元、过滤器或卷积神经网络的通道）。非结构化剪枝不考虑剪枝权重之间的任何关系
-
-4. group级别的pruning具体是怎么做的？
-
-   - 权重矩阵分组：首先，将神经网络中的权重矩阵划分为多个组。每个组包含一定数量的权重。组的数量和每个组的大小可以根据实际需求进行调整。
-
-   - 构建依赖图：根据神经网络的结构，构建一个依赖图来表示网络中各个结构之间的依赖关系。依赖图可以捕捉到组之间的连接和依赖关系。
-
-   - 剪枝策略生成：利用依赖图来生成剪枝策略。这个策略可以指导用户选择要剪枝的组，从而实现对神经网络的定制化压缩。
-
-   - 剪枝：根据剪枝策略对每个组进行剪枝。通常，我们会保留每个组中权重重要性最高的部分权重，并将其余权重设置为零。剪枝比例可以根据实际需求进行调整。
-
-   - 重新训练：剪枝后，对模型进行重新训练，以补偿剪枝过程中可能带来的性能损失。重新训练可以使用原始的训练数据和标签，或者使用部分训练数据进行微调。
-
-
-
-
-## 参考链接
-
-- <https://cs.nju.edu.cn/wujx/paper/Pruning_Survey_MLA21.pdf>
-- <https://zhuanlan.zhihu.com/p/619482727>
+## Conclusion 
+**rich, unsupervised pre-training is an integral part of many language understanding systems.**
+预训练模型也能让一些低资源任务从BERT的深度架构中收益。
+这篇论文的主要贡献是进一步将其推广至深度双向
